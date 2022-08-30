@@ -1,0 +1,53 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: photoprism
+  namespace: {{ index . "namespace" }}
+spec:
+  serviceAccountName: {{ index . "serviceAccountName" }}
+  releaseName: photoprism
+  chart:
+    spec:
+      chart: photoprism
+      version: "7.1.2"
+      sourceRef:
+        kind: HelmRepository
+        name: k8s-at-home
+  interval: 30m
+  install:
+    remediation:
+      retries: 3
+  test:
+    enable: false
+  values:
+    env:
+      PHOTOPRISM_ADMIN_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: photoprism-credentials
+            key: adminPassword
+      PHOTOPRISM_DATABASE_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: photoprism-credentials
+            key: dbPassword
+    ingress:
+      main:
+        {{- if index . "isNginxInstalled" }}
+        enabled: true
+        annotations:
+          kubernetes.io/ingress.class: nginx
+        hosts:
+          - host: photoprism.{{ index . "domain"}}
+            paths:
+              - path: "/"
+                pathType: Prefix
+        {{- else }}
+        enable: false
+        {{- end }}
+        {{- if and (index . "isNginxInstalled") (index . "isCertManagerInstalled") }}
+        tls:
+          - secretName: photoprism-cert
+            hosts:
+              - photoprism.{{ index . "domain"}}
+        {{- end }}
