@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: photoprism-cert
+  namespace: {{index . "namespace"}}
+spec:
+  dnsNames:
+    - photoprism.{{ index . "domain"}}
+  secretName: photoprism-cert
+  issuerRef:
+    name: cluster-issuer
+    kind: ClusterIssuer
