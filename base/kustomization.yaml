@@ -4,4 +4,7 @@ namespace: photoprism
 resources:
   - source.yaml
   - secret.yaml
+  {{- if index . "isClusterIssuerInstalled" }}
+  - certificate.yaml
+  {{- end }}
   - release.yaml
